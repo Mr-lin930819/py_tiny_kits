@@ -1,0 +1,7 @@
+<resources>
+    <string name="fmt_reso" translatable="false">%s*%s</string>
+    <string name="Temp">Temp</string>
+    <string name="Wind">Wind</string>
+    <string name="Hourly_Weather">Hourly Weather</string>
+    <string name="check_now">Check Now</string>
+</resources>
