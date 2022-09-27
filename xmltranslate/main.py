@@ -1,5 +1,6 @@
 # This is a sample Python script.
 import xml
+import re
 from xml.dom.minidom import Document
 
 # Press Shift+F10 to execute it or replace it with your code.
@@ -30,7 +31,7 @@ def outputByMiniDom(content, xml_file):
     f = open(xml_file, "w", encoding='utf-8')
     for k, v in content.items():
         s = doc.createElement("string")
-        value = doc.createTextNode(v.text)
+        value = doc.createTextNode(processText(v.text))
         resources.appendChild(s)
         s.setAttribute('name', k)
         s.appendChild(value)
@@ -47,18 +48,24 @@ def outputBySax(content, xml_file):
     x.startElement("resources", attr0)
     for k, v in content.items():
         x.startElement("string", xml.sax.xmlreader.AttributesImpl({'name': k}))
-        x.characters(v.text)
+        x.characters(processText(v.text))
         x.endElement("string")
     x.endElement("resources")
     x.endDocument()
     f.close()
 
 
-def translateToXml(string_list, dest):
+def processText(src):
+    result = re.sub(r'[％%]\s?([DdSs])', lambda matched: '%' + matched.group(1).lower(), src)
+    result = re.sub(r'[^\\]\'', '\\\\\'', result)
+    return result
+
+
+def translateToXml(string_list, dst):
     translator = Translator(service_url='translate.google.cn')
     origin_list = list(string_list.values())
     print(origin_list)
-    result_list = translator.translate(origin_list[:100], src='en', dest=dest)
+    result_list = translator.translate(origin_list, src='en', dest=dst)
     for t in result_list:
         print(t.text)
     result_dic = {}
@@ -68,13 +75,14 @@ def translateToXml(string_list, dest):
             break
         result_dic[k] = result_list[i]
         i = i + 1
-    outputBySax(result_dic, "../res/strings-%s.xml" % dest)
+    outputByMiniDom(result_dic, "../res/strings-%s.xml" % dst)
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     stringList = parseXml('../res/strings.xml')
     print(stringList)
-    translateToXml(stringList, dest='ta')
+    for d in ['it']:
+        translateToXml(stringList, dst=d)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
