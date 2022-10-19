@@ -1,13 +1,41 @@
 # This is a sample Python script.
 import xml
 import re
+import html
 from xml.dom.minidom import Document
+from urllib import parse
+from xmltranslate.model import NewTranslated
+import requests
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-from pygoogletranslation import Translator
+# from pygoogletranslation import Translator
 
 from StringsHandler import StringsHandler
+
+GOOGLE_TRANSLATE_URL = 'http://translate.google.com/m?q=%s&tl=%s&sl=%s'
+
+
+def translateNew(text, dest="auto", src="auto"):
+    result_list = []
+    if type(text) == list:
+        final_text = '\n'.join(text)
+    else:
+        final_text = text
+
+    final_text = parse.quote(final_text)
+    url = GOOGLE_TRANSLATE_URL % (final_text, dest, src)
+    response = requests.get(url)
+    data = response.text
+    expr = r'(?s)class="(?:t0|result-container)">(.*?)<'
+    result = re.findall(expr, data)
+    if len(result) == 0:
+        return ""
+
+    result_text = html.unescape(result[0])
+    for r in result_text.split('\n'):
+        result_list.append(NewTranslated(r))
+    return result_list
 
 
 def parseXml(xml_file):
@@ -62,10 +90,12 @@ def processText(src):
 
 
 def translateToXml(string_list, dst):
-    translator = Translator(service_url='translate.google.cn')
     origin_list = list(string_list.values())
     print(origin_list)
-    result_list = translator.translate(origin_list, src='en', dest=dst)
+    # 旧的谷歌api，翻译不准确
+    # translator = Translator(service_url='translate.google.cn')
+    # result_list = translator.translate(origin_list, src='en', dest=dst)
+    result_list = translateNew(origin_list, src='en', dest=dst)
     for t in result_list:
         print(t.text)
     result_dic = {}
